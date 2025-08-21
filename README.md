@@ -76,5 +76,5 @@ scp clip.wav username@pc_ip:~/audio_clips/
 
 # On PC: Process the clip
 python process.py clip.wav
-
+```
 ---
