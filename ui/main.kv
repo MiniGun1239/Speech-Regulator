@@ -1,0 +1,99 @@
+# ui/main.kv - Branded Design (Cleaned)
+
+<MainLayout>:
+    orientation: "vertical"
+    padding: dp(20)
+    spacing: dp(15)
+    canvas.before:
+        Color:
+            rgb: 0.15, 0.15, 0.15
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    Label: #brand
+        id: brand_label
+        text: "Speech Regulation\nBy Team Members"
+        halign: "center"
+        valign: "middle"
+        text_size: self.width, None
+        font_size: "20sp"
+        bold: True
+        color: 0.8, 0.8, 0.8, 1
+        size_hint_y: 0.15
+        # Removed the temporary debugging background color
+
+
+    Label: #rec_status
+        id: status_label
+        text: "[color=AAAAAA]Stopped[/color]"
+        markup: True
+        font_size: "24sp"
+        bold: True
+        size_hint_y: None
+        height: self.texture_size[1] + dp(10)
+
+    Label: #trans_text
+        id: transcribed_text
+        text: "Detected: "
+        font_size: "18sp"
+        text_size: self.width - dp(40), None
+        halign: "center"
+        valign: "middle"
+        size_hint_y: None
+        height: self.texture_size[1] + dp(20)
+        color: 0.9, 0.9, 0.9, 1
+
+    Label: #hate_score
+        id: score_text
+        text: ""
+        font_size: "16sp"
+        color: 0.7, 0.7, 0.7, 1
+        size_hint_y: None
+        height: self.texture_size[1] + dp(10)
+
+    BoxLayout:
+        size_hint_y: None
+        height: "48dp"
+        spacing: dp(10)
+        TextInput:
+            id: manual_input
+            hint_text: "Type a sentence to test…"
+            multiline: False
+            on_text_validate: app.process_manual_input(self.text)
+            background_color: 0.25, 0.25, 0.25, 1
+            foreground_color: 0.9, 0.9, 0.9, 1
+            hint_text_color: 0.6, 0.6, 0.6, 1
+            padding: dp(10), dp(10)
+            font_size: "16sp"
+
+        Button:
+            text: "Classify"
+            on_release: app.process_manual_input(manual_input.text)
+            background_normal: ''
+            background_color: 0.2, 0.6, 0.8, 1
+            color: 1, 1, 1, 1
+            font_size: "16sp"
+            bold: True
+
+    BoxLayout:
+        size_hint_y: None
+        height: "48dp"
+        spacing: dp(10)
+        Button:
+            text: "Start/Stop Mic"
+            on_release: app.toggle_listen()
+            background_normal: ''
+            background_color: 0.2, 0.7, 0.4, 1
+            color: 1, 1, 1, 1
+            font_size: "16sp"
+            bold: True
+
+        Button:
+            text: "Exit"
+            on_release: app.stop()
+            background_normal: ''
+            background_color: 0.8, 0.3, 0.3, 1
+            color: 1, 1, 1, 1
+            font_size: "16sp"
+            bold: True

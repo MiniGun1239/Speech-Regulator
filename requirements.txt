@@ -1,0 +1,16 @@
+kivy
+sounddevice
+numpy
+faster-whisper
+onnxruntime
+ctranslate2
+tokenizers
+vosk
+torch
+time
+concurrent
+wave
+numpy
+datetime
+os
+re

@@ -1,0 +1,16 @@
+timestamp,text,top_scores
+2025-08-23 18:35:57,Hello my nigga,toxic:0.97; identity_hate:0.86; insult:0.80
+2025-08-23 18:36:07,how ae you bitch,toxic:0.99; obscene:0.95; insult:0.95
+2025-08-23 18:36:25,shut ybau,toxic:0.68; insult:0.03; obscene:0.02
+2025-08-23 18:36:44,shut yo bitch ass up (clean)),toxic:1.00; obscene:0.98; insult:0.95
+2025-08-23 19:28:45,"Hi you nice boy whats up with your face, linux isnt cool lil bro, dont even try to get your slimy hands",toxic:0.67; insult:0.14; obscene:0.01
+2025-08-23 19:28:53,"Hi you nice boy whats up with your face, linux isnt cool lil bro, dont even try to get your munchy slimy hands",toxic:0.63; insult:0.14; obscene:0.01
+2025-08-23 19:46:01,wtf,toxic:0.67; obscene:0.38; insult:0.02
+2025-08-23 21:47:09,"Be rude, wait, wait.  Jump off.",toxic:0.65; insult:0.02; obscene:0.02
+2025-08-23 21:47:22,Shut up.,toxic:0.96; insult:0.18; obscene:0.09
+2025-08-23 21:47:37,Hope you die. I hope you die.,toxic:0.82; threat:0.81; insult:0.12
+2025-08-23 21:48:20,both sides of your pelvis.,toxic:0.74; insult:0.20; obscene:0.07
+2025-08-23 21:48:27,I hope you lose one ear.,toxic:0.77; threat:0.53; insult:0.07
+2025-08-23 21:51:26,"Shut up, you son of a...",toxic:0.97; insult:0.65; obscene:0.20
+2025-08-23 21:51:37,"You're in shock, dude.",toxic:0.66; insult:0.15; obscene:0.01
+2025-08-23 21:52:18,"Okay, if you were a Muslim",toxic:0.63; identity_hate:0.34; insult:0.09
