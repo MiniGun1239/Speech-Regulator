@@ -34,12 +34,12 @@ Speech-Regulator/
 │   ├── classifier.py                           # Hate speech detection  
 │   └── response_handler.py                     # Feedback and logging  
 ├── models/  
-│   └── minuva/
-|       ├──config.json
-|       ├──model_optimized_quantisized.onnx     # Your model
-|       └──tokenizer.json
-├── logs/
-|   └──
+│   └── minuva/  
+|       ├── config.json  
+|       ├── model_optimized_quantisized.onnx   
+|       └── tokenizer.json  
+├── logs/  
+|   └── events.csv  
 ├── android/  
 │   └── buildozer.spec                          # Android build config  
 ├── windows/  
@@ -48,6 +48,8 @@ Speech-Regulator/
 │   └── icons, sounds, etc.  
 ├── README.md  
 └── requirements.txt  
+
+| Just view in raw .md file, i tried like 12 times to fix this
 
 ---
 ## Getting Started
