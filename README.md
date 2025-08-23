@@ -1,8 +1,5 @@
 # Speech-Regulator
 
-<<<<<<< HEAD
-Real-time hate speech detection using Python, Kivy, and Faster-Whisper.
-=======
 **Real-time hate speech detection for public and classroom environments, built with Python + Kivy.**
 
 Speech-Regulator is a cross-platform application designed to detect and discourage hate speech in real-world settings. It leverages speech-to-text processing and machine learning classification to identify harmful language and respond with visual or auditory cues. The system is built with ethical considerations in mind—prioritizing privacy, transparency, and offline capability.
@@ -30,18 +27,23 @@ Speech-Regulator is a cross-platform application designed to detect and discoura
 ## Project Structure
 
 Speech-Regulator/  
-├── main.py                  # Kivy app entry point  
-├── ui/                      # Kivy layout files (.kv)  
+├── main.py                                     # Kivy app entry point  
+├── ui/                                         # Kivy layout files (.kv)  
 ├── core/  
-│   ├── stt_engine.py        # Speech-to-text logic  
-│   ├── classifier.py        # Hate speech detection  
-│   └── response_handler.py  # Feedback and logging  
+│   ├── stt_engine.py                           # Speech-to-text logic  
+│   ├── classifier.py                           # Hate speech detection  
+│   └── response_handler.py                     # Feedback and logging  
 ├── models/  
-│   └── hatespeechmodel.onnx  
+│   └── minuva/
+|       ├──config.json
+|       ├──model_optimized_quantisized.onnx     # Your model
+|       └──tokenizer.json
+├── logs/
+|   └──
 ├── android/  
-│   └── buildozer.spec       # Android build config  
+│   └── buildozer.spec                          # Android build config  
 ├── windows/  
-│   └── pyinstaller.spec     # Windows build config  
+│   └── main.spec                               # Windows build config  
 ├── assets/  
 │   └── icons, sounds, etc.  
 ├── README.md  
@@ -51,10 +53,10 @@ Speech-Regulator/
 ## Getting Started
 
 ### Windows Build (PyInstaller)
-
+| In Speech-Regulator/windows
 ```bash
 pip install -r requirements.txt
-pyinstaller --onefile --windowed windows/pyinstaller.spec
+pyinstaller pyinstaller.spec
 ```
 ### Android Build (Buildozer) (WSL or Linux required)
 
@@ -107,4 +109,3 @@ This project is licensed under the MIT License.
 github.com/MiniGun1239
 
 ---
->>>>>>> a76fac2dd0dcd91f4a98409e695326499f668c08
