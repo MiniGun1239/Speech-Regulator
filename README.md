@@ -1,80 +1,106 @@
-# Real-Time Hate Speech Detection System
+# Speech-Regulator
 
-A classroom-oriented system designed to detect and respond to hate speech in real-time. This project features a Raspberry Pi for audio collection and a powerful PC backend for transcription, classification, and responsive signaling.
+**Real-time hate speech detection for public and classroom environments, built with Python + Kivy.**
 
----
-
-## System Architecture
-
-| Component        | Role                                              |
-|------------------|---------------------------------------------------|
-| Raspberry Pi     | Records short audio clips, sends to PC            |
-| Laptop (R5-5500U)| Handles all signal processing and classification  |
-| LEDs / Sensors   | Provides classroom-friendly feedback mechanisms   |
+Speech-Regulator is a cross-platform application designed to detect and discourage hate speech in real-world settings. It leverages speech-to-text processing and machine learning classification to identify harmful language and respond with visual or auditory cues. The system is built with ethical considerations in mind—prioritizing privacy, transparency, and offline capability.
 
 ---
 
-## Key Features
+## Platforms Supported
 
-- **Noise Suppression**: Optional pre-processing with RNNoise (native binary for speed)
-- **Speech Detection**: Silero VAD filters non-speech chunks
-- **Speech Recognition**: Whisper (tiny.en or base.en for <6s inference)
-- **Custom Hate Speech Boundaries**:
-  - Tiered keyword scoring
-  - Optional ML classifier using ONNX or scikit-learn
-- **Detection Sensitivity**:
-  - Threshold-based response levels
-  - LED alerts for mild/serious detection
-- **Privacy Controls**:
-  - Only two most recent clips stored
-- **Reliability**: Full processing must stay under clip length minus 1s
+- **Android** (via Buildozer)
+- **Windows** (via PyInstaller)
 
 ---
 
-## Performance Goals
+## Features
 
-| Clip Length | Max Processing Time | Achievable Components                        |
-|-------------|---------------------|----------------------------------------------|
-| 5s          | ≤ 4s                | Silero + RNNoise + tiny.en + Rule Classifier |
-| 10s         | ≤ 9s                | RNNoise + base.en + ONNX CNN model           |
-
-*Tested on R5-5500U laptop with Vega 7 iGPU and 20GB RAM*
-
----
-
-## Demo Mode
-
-Even though the Pi only records, its presence elevates presentation value. Add-ons for demo setup:
-- LEDs: blink, fade, or flash based on severity score
-- LCD display: show real-time response messages
-- Touch input: reset state or manually flag speech
+- **Live Audio Capture**: Uses device microphone to monitor speech in real time  
+- **Speech-to-Text Engine**: Converts spoken language to text using offline or online STT modules  
+- **Hate Speech Detection**: Classifies transcribed text using a lightweight ONNX model  
+- **Responsive Feedback**: Triggers visual or auditory alerts to discourage harmful speech  
+- **Privacy-First Design**: No cloud logging or external data transmission by default  
+- **Event Logging**: Optionally stores detection events for review and analysis  
 
 ---
 
-## Future Plans
-    Add teacher dashboard for live incident review
-    Include multi-language hate speech detection
-    Add anonymized reporting for flagged clips
-    Replace keyword matching with phoneme-based detection for raw audio processing
+## Project Structure
 
-## Ethical Principles
-This project prioritizes:
-    Privacy over surveillance
-    Transparency over hidden monitoring
-    Intent-aware classification for context-sensitive detection
+Speech-Regulator/  
+├── main.py                  # Kivy app entry point  
+├── ui/                      # Kivy layout files (.kv)  
+├── core/  
+│   ├── stt_engine.py        # Speech-to-text logic  
+│   ├── classifier.py        # Hate speech detection  
+│   └── response_handler.py  # Feedback and logging  
+├── models/  
+│   └── hatespeechmodel.onnx  
+├── android/  
+│   └── buildozer.spec       # Android build config  
+├── windows/  
+│   └── pyinstaller.spec     # Windows build config  
+├── assets/  
+│   └── icons, sounds, etc.  
+├── README.md  
+└── requirements.txt  
 
-Hate speech detection should Promote safer spaces, not punish random interactions. This system emphasizes silent flags and gradual escalation.
+---
+## Getting Started
 
-##  How to Run
+### Windows Build (PyInstaller)
 
 ```bash
-# Record audio on Pi (chunked)
-arecord -D plughw:1,0 -f cd -t wav -d 5 -r 16000 -c 1 clip.wav
-
-# Transfer to PC
-scp clip.wav username@pc_ip:~/audio_clips/
-
-# On PC: Process the clip
-python process.py clip.wav
+pip install -r requirements.txt
+pyinstaller --onefile --windowed windows/pyinstaller.spec
 ```
+### Android Build (Buildozer) (WSL or Linux required)
+
+```bash
+sudo apt install buildozer
+buildozer init
+buildozer -v android debug
+```
+| Make sure to enable microphone permissions in [buildozer.spec].
+
+### Model Details
+
+- **Format:** ONNX
+- **Input:** Transcribed text
+- **Output:** Binary classification (Hate / Neutral)
+- **Optional/Later:** Confidence score thresholding for nuanced feedback
+
+---
+
+### Ethical Considerations
+
+**Speech-Regulator is designed with the following principles:**
+
+- **Transparency:** Users are informed when detection occurs
+- **Privacy:** No audio or text is stored or transmitted externally by default
+- **Context Awareness:** Future versions may include contextual filtering to reduce false positives
+
+---
+
+### Screenshots & Demo
+
+*Coming soon*
+
+---
+
+### Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you’d like to modify.
+
+---
+
+### License
+
+This project is licensed under the MIT License.
+
+---
+
+### Author
+
+github.com/MiniGun1239
+
 ---
