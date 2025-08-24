@@ -28,7 +28,11 @@ Speech-Regulator is a cross-platform application designed to detect and discoura
 
 Speech-Regulator/  
 ├── main.py                                     # Kivy app entry point  
-├── ui/                                         # Kivy layout files (.kv)  
+├── ui/                                         # Kivy layout files (.kv), assets  
+|   ├── main.kv
+|   └── assets/
+|       ├── alert.wav  
+|       └── more audio, ui files..              # More files to be added here
 ├── core/  
 │   ├── stt_engine.py                           # Speech-to-text logic  
 │   ├── classifier.py                           # Hate speech detection  
@@ -36,16 +40,14 @@ Speech-Regulator/
 ├── models/  
 │   └── minuva/  
 |       ├── config.json  
-|       ├── model_optimized_quantisized.onnx   
+|       ├── model_optimized_quantized.onnx   
 |       └── tokenizer.json  
 ├── logs/  
 |   └── events.csv  
 ├── android/  
 │   └── buildozer.spec                          # Android build config  
 ├── windows/  
-│   └── main.spec                               # Windows build config  
-├── assets/  
-│   └── icons, sounds, etc.  
+│   └── main.spec                               # Windows build config   
 ├── README.md  
 └── requirements.txt  
 
@@ -83,7 +85,7 @@ buildozer -v android debug
 **Speech-Regulator is designed with the following principles:**
 
 - **Transparency:** Users are informed when detection occurs
-- **Privacy:** No audio or text is stored or transmitted externally by default
+- **Privacy:** No audio is stored or transmitted externally by default
 - **Context Awareness:** Future versions may include contextual filtering to reduce false positives
 
 ---
