@@ -1,4 +1,4 @@
-# ui/main.kv - Branded Design (Cleaned)
+# ui/main.kv - Branded Design with Log Floating Window Integration
 
 <MainLayout>:
     orientation: "vertical"
@@ -11,7 +11,7 @@
             pos: self.pos
             size: self.size
 
-    Label: #brand
+    Label:
         id: brand_label
         text: "Speech Regulation\nBy Team Members"
         halign: "center"
@@ -21,10 +21,8 @@
         bold: True
         color: 0.8, 0.8, 0.8, 1
         size_hint_y: 0.15
-        # Removed the temporary debugging background color
 
-
-    Label: #rec_status
+    Label:
         id: status_label
         text: "[color=AAAAAA]Stopped[/color]"
         markup: True
@@ -33,7 +31,7 @@
         size_hint_y: None
         height: self.texture_size[1] + dp(10)
 
-    Label: #trans_text
+    Label:
         id: transcribed_text
         text: "Detected: "
         font_size: "18sp"
@@ -44,7 +42,7 @@
         height: self.texture_size[1] + dp(20)
         color: 0.9, 0.9, 0.9, 1
 
-    Label: #hate_score
+    Label:
         id: score_text
         text: ""
         font_size: "16sp"
@@ -85,6 +83,16 @@
             on_release: app.toggle_listen()
             background_normal: ''
             background_color: 0.2, 0.7, 0.4, 1
+            color: 1, 1, 1, 1
+            font_size: "16sp"
+            bold: True
+
+        Button:
+            id: log_button # Give the button an ID to reference it from Python
+            text: "View Logs"
+            on_release: app.show_log_window(self) # Call the new method to show the floating window
+            background_normal: ''
+            background_color: 0.6, 0.4, 0.8, 1
             color: 1, 1, 1, 1
             font_size: "16sp"
             bold: True
