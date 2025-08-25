@@ -2,6 +2,7 @@ import numpy as np
 import sounddevice as sd
 import torch
 from faster_whisper import WhisperModel
+import logging # Import the logging module
 
 class STTEngine:
     """
@@ -11,13 +12,14 @@ class STTEngine:
     Start with enabled=False for manual tests.
     Flip to True via 'Start/Stop Mic' to use Whisper.
     """
-    def __init__(self, model_size="tiny", enabled=False, sample_rate=16000, duration=1.5): # Reduced duration for responsiveness
+    def __init__(self, model_size="tiny", enabled=False, sample_rate=16000, duration=1.5): # Removed app_logger
         self.enabled = enabled
         self.sample_rate = sample_rate
         self.duration = duration
         self._model = None
         self._model_size = model_size
         self._audio_buffer = np.array([], dtype=np.float32) # For potential future non-blocking capture
+        self.logger = logging.getLogger("SpeechRegulator") # Use the globally configured logger
 
     def _ensure_model(self):
         """Ensures the Whisper model is loaded only once."""
@@ -30,7 +32,7 @@ class STTEngine:
             # "float16" for GPU (half-precision for speed on GPU)
             compute_type = "int8" if device == "cpu" else "float16"
             
-            print(f"[STT] Loading Whisper model '{self._model_size}' on '{device}' with compute_type='{compute_type}'")
+            self.logger.info(f"[STT] Loading Whisper model '{self._model_size}' on '{device}' with compute_type='{compute_type}'")
             self._model = WhisperModel(self._model_size, device=device, compute_type=compute_type)
 
     def listen(self):
@@ -39,7 +41,7 @@ class STTEngine:
         Now uses VAD filter for better performance by ignoring silent segments.
         """
         try:
-            self. _ensure_model()
+            self._ensure_model()
             
             # Record audio for the specified duration
             # sd.rec is blocking, meaning it waits until the recording is complete.
@@ -66,6 +68,5 @@ class STTEngine:
             return text if text else None
         except Exception as e:
             # Log any errors during transcription
-            print(f"[STT ERROR] {e}")
+            self.logger.error(f"[STT ERROR] Error during transcription: {e}")
             return None
-
