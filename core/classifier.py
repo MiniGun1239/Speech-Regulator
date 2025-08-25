@@ -1,124 +1,132 @@
 import os
 import json
-import numpy as np
-import onnxruntime as ort
-from tokenizers import Tokenizer
+import logging
 
-# Define the sigmoid function for converting model outputs to probabilities
-SIGMOID = lambda x: 1 / (1 + np.exp(-x))
+import numpy as np
+from onnxruntime import InferenceSession
+from transformers import AutoTokenizer
 
 class HateSpeechClassifier:
     """
-    Uses an ONNX toxicity model (in this case: 'minuva/MiniLMv2-toxic-jigsaw-onnx') for efficient hate speech detection.
-    Expects model files in: model_dir/{model_optimized_quantized.onnx, tokenizer.json, config.json}.
-    Includes a fallback mechanism if the ONNX model cannot be loaded.
+    Classifies text as hate speech using an ONNX-optimized Hugging Face model.
+    It loads a pre-trained tokenizer, model, and configuration.
     """
-    def __init__(self, model_dir="models/minuva", provider="CPUExecutionProvider", threshold=0.5):
+    def __init__(self, model_dir="models/minuva", threshold=0.5, resource_path_func=None): # Removed app_logger
         """
-        Initializes the HateSpeechClassifier.
+        Initializes the classifier by loading the model, tokenizer, and config.
         Args:
-            model_dir (str): Directory containing the ONNX model, tokenizer, and config files.
-            provider (str): ONNX Runtime execution provider (e.g., "CPUExecutionProvider", "CUDAExecutionProvider").
-                            "CUDAExecutionProvider" is highly recommended for GPU acceleration.
-            threshold (float): Score threshold (0-1) above which text is classified as hate speech.
+            model_dir (str): Relative path to the directory containing the ONNX model,
+                             tokenizer.json, and config.json.
+            threshold (float): The probability threshold above which a text is considered hate speech.
+            resource_path_func (callable): A function to resolve paths for bundled resources.
         """
+        self.logger = logging.getLogger("SpeechRegulator") # Use the globally configured logger
+        self.resource_path_func = resource_path_func if resource_path_func else (lambda x: x) # Use provided func or identity
+
+        self.model_path = self.resource_path_func(os.path.join(model_dir, "model_optimized_quantized.onnx"))
+        self.tokenizer_path = self.resource_path_func(os.path.join(model_dir, "tokenizer.json"))
+        self.config_path = self.resource_path_func(os.path.join(model_dir, "config.json"))
         self.threshold = threshold
-        self.available = False  # Flag to indicate if the ONNX model was successfully loaded
-        self.id2label = {}      # Maps numerical label IDs to human-readable labels
 
-        # Construct full paths to model files
-        model_path = os.path.join(model_dir, "model_optimized_quantized.onnx")
-        tok_path   = os.path.join(model_dir, "tokenizer.json")
-        cfg_path   = os.path.join(model_dir, "config.json")
+        self.tokenizer = None
+        self.model = None
+        self.labels = [] # Will be loaded from config
 
-        # Attempt to load the ONNX model and tokenizer
+        self._load_resources()
+
+    def _load_resources(self):
+        """Loads the ONNX model, tokenizer, and labels from the config."""
+        # --- Load Model ---
+        self.logger.debug(f"[Classifier Debug] Attempting to load model from: {self.model_path}")
+        if not os.path.exists(self.model_path):
+            self.logger.error(f"[Classifier ERROR] Model file not found: {self.model_path}")
+            raise FileNotFoundError(f"Model file not found: {self.model_path}")
         try:
-            # Check if model directory exists before proceeding
-            if not os.path.exists(model_dir):
-                raise FileNotFoundError(f"Model directory not found: {model_dir}")
-            if not os.path.exists(model_path):
-                raise FileNotFoundError(f"ONNX model file not found: {model_path}")
-            if not os.path.exists(tok_path):
-                raise FileNotFoundError(f"Tokenizer file not found: {tok_path}")
-            if not os.path.exists(cfg_path):
-                raise FileNotFoundError(f"Config file not found: {cfg_path}")
-
-            # Initialize ONNX Inference Session
-            # It's recommended to use "CUDAExecutionProvider" if a compatible GPU is available
-            self.session = ort.InferenceSession(model_path, providers=[provider])
-            
-            # Load and configure the tokenizer
-            self.tokenizer = Tokenizer.from_file(tok_path)
-            self.tokenizer.enable_padding()  # Enable padding to max_length for consistent input
-            self.tokenizer.enable_truncation(max_length=256) # Truncate sequences longer than 256 tokens
-
-            # Load model configuration (specifically for id2label mapping)
-            with open(cfg_path, "r", encoding="utf-8") as f:
-                cfg = json.load(f)
-            
-            # Normalize id2label keys to integers as they might be strings in the config file
-            self.id2label = {int(k): v for k, v in cfg.get("id2label", {}).items()}
-            self.available = True
-            print(f"[Classifier] Successfully loaded ONNX model with labels: {list(self.id2label.values())}")
-
+            self.model = InferenceSession(self.model_path)
         except Exception as e:
-            # Fallback to a simple keyword-based classifier if ONNX model loading fails
-            print(f"[Classifier WARNING] ONNX model could not be loaded ({e}). "
-                  f"Falling back to a basic keyword rule-based classifier.")
-            # A tiny, hardcoded keyword list to keep the application functional
-            self.badwords = {"slur", "trash", "hate", "idiot", "stupid", "kill", "harass", "attack", "toxic"}
+            self.logger.error(f"[Classifier ERROR] Failed to load ONNX model from {self.model_path}: {e}")
+            raise
+
+        # --- Load Tokenizer ---
+        self.logger.debug(f"[Classifier Debug] Attempting to load tokenizer from: {self.tokenizer_path}")
+        if not os.path.exists(self.tokenizer_path):
+            self.logger.error(f"[Classifier ERROR] Tokenizer file not found: {self.tokenizer_path}")
+            raise FileNotFoundError(f"Tokenizer file not found: {self.tokenizer_path}")
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(os.path.dirname(self.tokenizer_path))
+        except Exception as e:
+            self.logger.error(f"[Classifier ERROR] Failed to load tokenizer from {os.path.dirname(self.tokenizer_path)}: {e}")
+            raise
+
+        # --- Load Config for Labels ---
+        self.logger.debug(f"[Classifier Debug] Attempting to load config from: {self.config_path}")
+        if not os.path.exists(self.config_path):
+            self.logger.warning(f"[Classifier WARNING] Config file not found: {self.config_path}. Labels might be missing.")
+            # We can proceed without config, but labels will be numeric indices.
+        else:
+            try:
+                with open(self.config_path, "r", encoding="utf-8") as f:
+                    config = json.load(f)
+                    if "id2label" in config:
+                        # Convert id2label dictionary (where keys are strings) to a sorted list of labels
+                        self.labels = [config["id2label"][str(i)] for i in range(len(config["id2label"]))]
+                    else:
+                        self.logger.warning(f"[Classifier WARNING] 'id2label' not found in config: {self.config_path}. Labels will be default.")
+            except Exception as e:
+                self.logger.error(f"[Classifier ERROR] Failed to load or parse config from {self.config_path}: {e}")
+        
+        self.logger.info(f"[Classifier] Successfully loaded ONNX model with labels: {self.labels if self.labels else 'Not available'}")
 
     def predict(self, text: str) -> dict:
         """
-        Predicts toxicity scores for the given text.
-        Returns a dictionary mapping label names to their respective scores (0 to 1).
-        If the ONNX model is unavailable, it uses a simpler keyword-based fallback.
+        Predicts the hate speech scores for a given text.
         Args:
             text (str): The input text to classify.
         Returns:
-            dict: A dictionary where keys are toxicity labels (e.g., "toxic", "insult")
-                  and values are their corresponding float scores (0-1).
-                  Returns an empty dictionary if input text is empty or whitespace.
+            dict: A dictionary of {label: score} pairs.
         """
-        if not text or not text.strip():
+        if not self.tokenizer or not self.model:
+            self.logger.error("[Classifier ERROR] Model or tokenizer not loaded. Cannot make predictions.")
             return {}
 
-        # Use fallback classifier if ONNX model is not available
-        if not self.available:
-            lower_text = text.lower()
-            # Simple keyword matching: assign high score if any badword is present, else low score
-            score = 0.8 if any(word in lower_text for word in self.badwords) else 0.05
-            return {"toxic": score}
-
-        # Encode the text using the loaded tokenizer
-        enc = self.tokenizer.encode(text)
+        inputs = self.tokenizer(text, return_tensors="np", padding=True, truncation=True, max_length=512)
         
-        # Prepare inputs for the ONNX model
-        # Input_ids, attention_mask, and token_type_ids are standard for BERT-family models
-        inputs = {
-            "input_ids":      np.array([enc.ids], dtype=np.int64),
-            "attention_mask": np.array([enc.attention_mask], dtype=np.int64),
-            "token_type_ids": np.array([enc.type_ids], dtype=np.int64),
-        }
-        
-        # Run inference using the ONNX session
-        outputs = self.session.run(None, inputs)[0] # The model returns a single output tensor
-        scores = SIGMOID(outputs)[0]                # Apply sigmoid to convert logits to probabilities
+        # ONNX Runtime expects inputs as a dictionary
+        onnx_inputs = {name: inputs[name] for name in inputs.keys()}
 
-        # Map numerical scores back to human-readable labels
-        return {self.id2label[i]: float(scores[i]) for i in range(len(scores))}
+        try:
+            outputs = self.model.run(None, onnx_inputs)
+            # The output of the model is usually a list; take the first element (logits)
+            logits = outputs[0]
+            
+            # Apply sigmoid to convert logits to probabilities
+            scores = 1 / (1 + np.exp(-logits))
+            
+            # Map scores to labels
+            result = {}
+            for i, score in enumerate(scores[0]): # scores[0] because batch size is 1
+                label = self.labels[i] if i < len(self.labels) else f"label_{i}"
+                result[label] = float(score) # Convert numpy float to Python float
+            return result
+        except Exception as e:
+            self.logger.error(f"[Classifier ERROR] Error during prediction for text '{text}': {e}")
+            return {}
 
     def is_hate_speech_from_scores(self, scores: dict) -> bool:
         """
-        Determines if the text is classified as hate speech based on the predicted scores
-        and the predefined threshold.
+        Determines if any score exceeds the defined hate speech threshold.
         Args:
-            scores (dict): Dictionary of label-to-score mappings from the predict method.
+            scores (dict): A dictionary of {label: score} pairs from `predict`.
         Returns:
-            bool: True if any label's score exceeds the threshold, False otherwise.
+            bool: True if any score is above the threshold, False otherwise.
         """
         if not scores:
-            return False
-        # Check if any of the predicted scores meet or exceed the classification threshold
-        return any(v >= self.threshold for v in scores.values())
+            return False # No scores, so not hate speech
 
+        for label, score in scores.items():
+            if score >= self.threshold:
+                self.logger.info(f"[Classifier] Hate speech detected: Label '{label}' score {score:.2f} >= threshold {self.threshold}")
+                return True
+        self.logger.info(f"[Classifier] No hate speech detected for scores: {scores}")
+        return False
+        
