@@ -25,7 +25,7 @@ Speech-Regulator is a cross-platform application designed to detect and discoura
 ---
 
 ## Project Structure
-
+```bash
 Speech-Regulator/  
 ├── main.py                                     # Kivy app entry point  
 ├── ui/                                         # Kivy layout files (.kv), assets  
@@ -50,8 +50,7 @@ Speech-Regulator/
 │   └── main.spec                               # Windows build config   
 ├── README.md  
 └── requirements.txt  
-
-| Just view in raw .md file, i tried like 12 times to fix this
+```
 
 ---
 ## Getting Started
