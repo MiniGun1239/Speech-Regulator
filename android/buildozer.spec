@@ -1,1 +1,1 @@
-# Buildozer spec placeholder
+# Project has been disconinued
