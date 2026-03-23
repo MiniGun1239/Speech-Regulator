@@ -1,7 +1,1 @@
-kivy
-numpy
-torch
-fasterwhisper
-onnxruntime
-tokenizers
-threading
+# Project has been disconinued
